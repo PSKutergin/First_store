@@ -38,7 +38,7 @@ button.good_delete {
     cursor: pointer;
 }
 
-.conteiner {
+.container {
     background-color: #f8f8f8;
     box-shadow: 0px 0px 9px -2px rgba(0, 0, 0, 0.2);
     border-radius: 10px;
@@ -50,6 +50,7 @@ button.good_delete {
     justify-content: center;
     align-items: center;
     margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 .price_title,
@@ -63,6 +64,7 @@ th {
     cursor: pointer;
     padding: 15px;
     text-align: center;
+    background-color: #c0dff9;
 }
 
 tr {
