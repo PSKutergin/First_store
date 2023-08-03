@@ -1,3 +1,36 @@
+table1.onclick = function(e) {
+  if(e.target.tagName != 'TH') return
+  let th = e.target
+  sortTable(th.cellIndex, th.dataset.type, 'table1')
+}
+
+table2.onclick = function(e) {
+  if(e.target.tagName != 'TH') return
+  let th = e.target
+  sortTable(th.cellIndex, th.dataset.type, 'table2')
+}
+
+function sortTable(colNum, type, id) {
+  let elem = document.getElementById(id)
+  let tbody = elem.querySelector('tbody')
+  let rowsArray = Array.from(tbody.rows)
+  let compare
+  switch(type) {
+    case 'number':
+      compare = function(rowA, rowB) {
+        return rowA.cells[colNum].innerHTML - rowB.cells[colNum].innerHTML
+      }
+      break
+    case 'string':
+      compare = function(rowA, rowB) {
+        return rowA.cells[colNum].innerHTML > rowB.cells[colNum].innerHTML ? 1 : -1
+      }
+      break
+  }
+  rowsArray.sort(compare)
+  tbody.append(...rowsArray)
+}
+
 if (!localStorage.getItem('goods')) {
   localStorage.setItem('goods', JSON.stringify([]))
 }
@@ -39,55 +72,40 @@ update_goods()
 
 function update_goods() {
   let result_price = 0
-  let tbody = document.querySelector('.list')
-  tbody.innerHTML = ''
-  document.querySelector('.card').innerHTML = ''
+  let tbodyList = document.querySelector('.list')
+  let tbodyCart = document.querySelector('.cart')
+  tbodyList.innerHTML = ""
+  tbodyCart.innerHTML = ""
   let goods = JSON.parse(localStorage.getItem('goods'))
   if (goods.length) {
     table1.hidden = false
     table2.hidden = false
     for (let i = 0; i < goods.length; i++) {
-      tbody.insertAdjacentHTML(
-        'beforeend',
-        `
-            <tr class="align-middle">
-                <td>${i + 1}</td>
-                <td class="name">${goods[i][1]}</td>
-                <td class="price">${goods[i][2]}</td>
-                <td>${goods[i][3]}</td>
-                <td><button class="good_delete btn-danger" data-delete="${
-                  goods[i][0]
-                }">&#10006</button></td>
-                <td><button class="good_delete btn-primary" data-goods="${
-                  goods[i][0]
-                }">&#10149</button></td>
-            </tr>
-            `,
-      )
+      if (goods[i][3] > 0) {
+        tbodyList.insertAdjacentHTML('beforeend', `
+              <tr class="align-middle">
+                  <td>${i + 1}</td>
+                  <td class="name">${goods[i][1]}</td>
+                  <td class="price">${goods[i][2]}</td>
+                  <td>${goods[i][3]}</td>
+                  <td><button class="good_delete btn btn-danger" data-delete="${goods[i][0]}">&#10006</button></td>
+                  <td><button class="good_delete btn btn-primary" data-goods="${goods[i][0]}">&#10149</button></td>
+              </tr>`,
+        )
+      }
       if (goods[i][4] > 0) {
-        goods[i][6] =
-          goods[i][4] * goods[i][2] -
-          goods[i][4] * goods[i][2] * goods[i][5] * 0.01
+        goods[i][6] = goods[i][4] * goods[i][2] - goods[i][4] * goods[i][2] * goods[i][5] * 0.01
         result_price += goods[i][6]
-        document.querySelector('card').insertAdjacentHTML(
-          'beforeend',
-          `
+        tbodyCart.insertAdjacentHTML('beforeend', `
                 <tr class="align-middle">
                     <td>${i + 1}</td>
                     <td class="price_name">${goods[i][1]}</td>
                     <td class="price_one">${goods[i][2]}</td>
                     <td class="price_count">${goods[i][4]}</td>
-                    <td class="price_discount"><input data-goodid="${
-                      goods[i][0]
-                    }" type="text" value="${
-            goods[i][5]
-          }" min="0" max="100"></td>
+                    <td class="price_discount"><input data-goodid="${goods[i][0]}" type="text" value="${goods[i][5]}" min="0" max="100"></td>
                     <td>${goods[i][6]}</td>
-                    <td><button class="good_delete btn-danger" data-delete="${
-                      goods[i][0]
-                    }">&#10006</button></td>
-                </tr>
-                `,
+                    <td><button class="good_delete btn btn-danger" data-delete="${goods[i][0]}">&#10006</button></td>
+                </tr>`,
         )
       }
     }
@@ -103,7 +121,6 @@ document.querySelector('.list').addEventListener('click', function (e) {
   if (!e.target.dataset.delete) {
     return
   }
-  console.log(e.target.dataset.delete);
   Swal.fire({
     title: 'Внимание!',
     text: 'Вы действительно хотите удалить товар?',
@@ -114,7 +131,7 @@ document.querySelector('.list').addEventListener('click', function (e) {
     confirmButtonText: 'Да',
     cancelButtonText: 'Отмена',
   }).then((result) => {
-    if(result.isConfirmed) {
+    if (result.isConfirmed) {
       let goods = JSON.parse(localStorage.getItem('goods'))
       for (let i = 0; i < goods.length; i++) {
         if (goods[i][0] == e.target.dataset.delete) {
@@ -123,11 +140,37 @@ document.querySelector('.list').addEventListener('click', function (e) {
           update_goods()
         }
       }
-      Swal.fire(
-        "Удалено!",
-        "Выбранный товар был успешно удален.",
-        "success"
-      )
+      Swal.fire('Удалено!', 'Выбранный товар был успешно удален.', 'success')
     }
   })
+})
+
+document.querySelector('.list').addEventListener('click', function (e) {
+  if (!e.target.dataset.goods) {
+    return
+  }
+  let goods = JSON.parse(localStorage.getItem('goods'))
+  for (let i = 0; i < goods.length; i++) {
+    if (goods[i][3]>0 && goods[i][0] == e.target.dataset.goods) {
+      goods[i].splice(3,1, goods[i][3]-1)
+      goods[i].splice(4,1, goods[i][4]+1)
+      localStorage.setItem('goods', JSON.stringify(goods))
+      update_goods()
+    }
+  }
+})
+
+document.querySelector('.cart').addEventListener('click', function (e) {
+  if (!e.target.dataset.delete) {
+    return
+  }
+  let goods = JSON.parse(localStorage.getItem('goods'))
+  for (let i = 0; i < goods.length; i++) {
+    if (goods[i][4]>0 && goods[i][0] == e.target.dataset.delete) {
+      goods[i].splice(3,1, goods[i][3]+1)
+      goods[i].splice(4,1, goods[i][4]-1)
+      localStorage.setItem('goods', JSON.stringify(goods))
+      update_goods()
+    }
+  }
 })
